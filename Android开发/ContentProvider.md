@@ -28,7 +28,7 @@
 
     - **申请权限**
     ```java
-    //#ActivityCompat类
+    /** #ActivityCompat类 */
     public static void requestPermissions(Activity activity, String[] permissions, int requestCode)
     ```
     <table>
@@ -51,8 +51,8 @@
 
     - **处理权限申请结果**
     ```java
-    //interface ActivityCompat.OnRequestPermissionsResultCallback
-    //AppCompatActivity实现了该接口，我们只需在Activity中重写该方法即可
+    /**interface ActivityCompat.OnRequestPermissionsResultCallback
+     * AppCompatActivity实现了该接口，我们只需在Activity中重写该方法即可 */
     abstract void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     ```
 
@@ -204,7 +204,8 @@
 #### ContentResolver--访问其他程序中的数据
 
 ```java
-getContentResolver()
+/** #Context类, Return a ContentResolver instance for your application's package.*/
+public abstract ContentResolver getContentResolver();
 ```
 
 1. **内容URI**
@@ -259,13 +260,13 @@ public final Uri insert(Uri url, ContentValues values)
 4. **更新数据**
 
 ```java
-//@return the number of rows updated.
+/** @return the number of rows updated.*/
 public final int update(Uri uri, ContentValues values, String where, String[] selectionArgs)
 ```
 
 5. **删除数据**
 
 ```java
-//@return The number of rows deleted.
+/** @return The number of rows deleted.*/
 public final int delete(Uri url, String where, String[] selectionArgs)
 ```
