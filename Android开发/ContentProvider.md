@@ -395,10 +395,10 @@ public abstract List<String> getPathSegments();
 
 4. **AndroidManifest.xml注册**
 
->内容提供器必须在AndroidManifest.xml文件内注册才可以使用
->android:name指定内容提供器的类名
->android:authorities指定了内容提供器的authority
->android:enabled, android:exported表示允许其他程序进行访问
+>内容提供器必须在AndroidManifest.xml文件内注册才可以使用.
+>android:name指定内容提供器的类名;
+>android:authorities指定了内容提供器的authority;
+>android:enabled, android:exported表示允许其他程序进行访问;
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.contentprovider">
