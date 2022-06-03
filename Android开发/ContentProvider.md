@@ -20,7 +20,7 @@
     - **检查权限**
     ```java
     /**
-    * #ContextCompat类, @return PERMISSION_GRANTED if you have the permission,
+    * #Class ContextCompat, @return PERMISSION_GRANTED if you have the permission,
     * or PERMISSION_DENIED if not.
     */ 
     public static int checkSelfPermission(Context context, String permission)
@@ -28,7 +28,7 @@
 
     - **申请权限**
     ```java
-    /** #ActivityCompat类 */
+    /** #Class ActivityCompat */
     public static void requestPermissions(Activity activity, String[] permissions, int requestCode)
     ```
     <table>
@@ -51,8 +51,8 @@
 
     - **处理权限申请结果**
     ```java
-    /**interface ActivityCompat.OnRequestPermissionsResultCallback
-     * AppCompatActivity实现了该接口，我们只需在Activity中重写该方法即可 */
+    /** #interface ActivityCompat.OnRequestPermissionsResultCallback
+     * #Class AppCompatActivity实现了该接口，我们只需在Activity中重写该方法即可 */
     abstract void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     ```
 
@@ -204,7 +204,7 @@
 #### ContentResolver--访问其他程序中的数据
 
 ```java
-/** #Context类, Return a ContentResolver instance for your application's package.*/
+/** #Class Context, Return a ContentResolver instance for your application's package.*/
 public abstract ContentResolver getContentResolver();
 ```
 
@@ -221,20 +221,24 @@ public abstract ContentResolver getContentResolver();
 
 - path
 
-    >path用于程序内不同表做区分的,通常会添加到authority后面,/table或者/table/1
+    >path用于程序内不同表做区分的,通常会添加到authority后面,/table
+
+- id
+
+    >id用于指定表内的某一条数据
 
 - 示例
 
     >content://com.example.app.provider/table1
     >content://com.example.app.provider/table2/1
 
-2. **查询数据**
+1. **查询数据**
 
 ```java
 /** @return A Cursor object, which is positioned before the first entry. May return
  * <code>null</code> if the underlying content provider returns <code>null</code>,
  * or if it crashes.
-*/
+ */
 public final Cursor query(Uri uri, String[] projection, 
                 String selection, String[] selectionArgs, String sortOrder)
 ```
@@ -251,9 +255,9 @@ public final Cursor query(Uri uri, String[] projection,
 
 ```java
 /**
- * @return the URL of the newly created row. May return <code>null</code> if the underlying
- * content provider returns <code>null</code>, or if it crashes.
-*/
+ * @return the URL of the newly created row. May return <code>null</code> 
+ * if the underlying content provider returns <code>null</code>, or if it crashes.
+ */
 public final Uri insert(Uri url, ContentValues values)
 ```
 
@@ -261,7 +265,8 @@ public final Uri insert(Uri url, ContentValues values)
 
 ```java
 /** @return the number of rows updated.*/
-public final int update(Uri uri, ContentValues values, String where, String[] selectionArgs)
+public final int update(Uri uri, ContentValues values, String where, 
+                String[] selectionArgs)
 ```
 
 5. **删除数据**
@@ -269,4 +274,146 @@ public final int update(Uri uri, ContentValues values, String where, String[] se
 ```java
 /** @return The number of rows deleted.*/
 public final int delete(Uri url, String where, String[] selectionArgs)
+```
+
+#### ContentProvider--设置其他程序访问自己程序数据的接口
+
+1. **继承ContentProvider类**
+
+>重写ContentProvider的六个抽象方法
+
+```java
+/** @return true if the provider was successfully loaded, false otherwise*/
+public abstract boolean onCreate();
+
+/** @return a Cursor or {@code null}. */
+public abstract Cursor query(Uri uri, String[] projection, 
+                String selection, String[] selectionArgs, String sortOrder);
+
+/** @return The URI for the newly inserted item.*/
+public abstract Uri insert(Uri url, ContentValues values);
+
+/** @return the number of rows affected. */
+public abstract int update(Uri uri, ContentValues values, String where, 
+                String[] selectionArgs);
+
+/** @return The number of rows affected. */
+public abstract int delete(Uri url, String where, String[] selectionArgs);
+
+/** @return a MIME type string, or {@code null} if there is no type. */
+public abstract String getType(Uri uri);
+```
+
+- **MIME**
+
+    - vnd开头
+    - URI path结尾: 后接`android.cursor.dir/`
+    - URI id结尾: 后接`android.cursor.item/`
+    - 最后接上`vnd.<authority>.<path>`
+    
+    >示例: vnd.android.cursor.dir/vnd.com.example.app.provider.table1
+    >vnd.android.cursor.item/vnd.com.example.app.provider.table1
+
+2. **UriMatcher实现匹配Uri**
+
+```java
+/**
+ * Creates the root node of the URI tree.
+ * 
+ * @param code the code to match for the root URI
+ */ 
+public UriMatcher(int code)
+public static final int NO_MATCH = -1;
+
+/**
+ * Add a URI to match, and the code to return when this URI is
+ * matched. URI nodes may be exact match string, the token "*"
+ * that matches any text, or the token "#" that matches only
+ * numbers.
+ */
+public void addURI(String authority, String path, int code)
+
+/**
+ * Try to match against the path in a url.
+ * 
+ * @return  The code for the matched node (added using addURI),
+ * or -1 if there is no matched node.
+ */
+public int match(Uri uri)
+```
+
+>示例
+```java
+public class MyProvider extends ContentProvider{
+    ...
+    public static UriMatcher uriMatcher;
+
+    static {
+        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        uriMatcher.addURI("com.example.app.provider", "table1", 0);
+        uriMatcher.addURI("com.example.app.provider", "table1/#", 1);
+        ...
+    }
+    ...
+    @Override
+    public String getType(Uri uri){
+        switch(uriMatcher.match(uri)){
+            case 0:
+                return "vnd.android.cursor.dir/vnd.com.example.app.provider.table1";
+            case 1:
+                return "vnd.android.cursor.item/vnd.com.example.app.provider.table1";
+            ...
+            default:
+                break;
+        }
+        return null;
+    }
+}
+```
+
+3. **其他辅助方法**
+
+- **Uri**
+```java
+/**
+ * Creates a Uri which parses the given encoded URI string.
+ *
+ * @param uriString an RFC 2396-compliant, encoded URI
+ * @throws NullPointerException if uriString is null
+ * @return Uri for this given uri string
+ */
+public static Uri parse(String uriString)
+
+/**
+ * Gets the decoded path segments.
+ * 
+ * @return decoded path segments, each without a leading or trailing '/'
+ * 列表第0个位置存放的path,第1个位置存放的是id
+ */ 
+public abstract List<String> getPathSegments();
+```
+
+4. **AndroidManifest.xml注册**
+
+>内容提供器必须在AndroidManifest.xml文件内注册才可以使用
+>android:name指定内容提供器的类名
+>android:authorities指定了内容提供器的authority
+>android:enabled, android:exported表示允许其他程序进行访问
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.contentprovider">
+
+    <application
+        android:allowBackup="true"
+        ...>
+        ...
+        <provider
+            android:name=".MyContentProvider"
+            android:authorities="com.example.contentprovider.provider"
+            android:enabled="true"
+            android:exported="true">
+        </provider>
+    </application>
+
+</manifest>
 ```
