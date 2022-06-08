@@ -8,6 +8,26 @@
 
 ```java
 ...
+ActivityResultLauncher<Intent> launcher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+        new ActivityResultCallback<ActivityResult>(){
+            //回调，读取拍下的图片并显示出来
+            @Override
+            public void onActivityResult(ActivityResult result){
+                if(result.getResultCode() == RESULT_OK){
+                    try{
+                        Bitmap bitmap = BitmapFactory.decodeStream(
+                            getContentResolver().openInputStream(imageUri));
+                    picture.setImageBitmap(bitmap);
+                    }catch(FileNotFoundException e){
+                    e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+@Override
+public void onCreate(Bundle savedInstanceStage){
+...
 File outputImage = new File(getExternalCacheDir(), "output_image.jpg");
 try{
     if(outputImage.exists()){
@@ -28,20 +48,8 @@ if(Build.VERSION.SDK_INT >= 24){
 Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
 /** 指定相机拍摄的图片存储的地址 */
 intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-registerActivityResult(new ActivityResultContracts.StartActivityForResult(),
-        new ActivityResultCallBack<ActivityResult>(){
-            //回调，读取拍下的图片并显示出来
-            @Override
-            public void onActivityResult(ActivityResult result){
-                if(result.getResultCode() = RESULT_OK){
-                    Bitmap bitmap = BitmapFactory.decodeStream(
-                            getContextResolver().onpenInputStream(imageUri));
-                    picture.setImageBitmap(bitmap);
-                }catch(FileNotFoundException e){
-                    e.printStackTrace();
-                }
-            }
-        }).launch(intent);
+launcher.launch(intent);
+}
 ...
 ```
 
@@ -51,14 +59,13 @@ registerActivityResult(new ActivityResultContracts.StartActivityForResult(),
     
 ```xml
 <provider
-    android:name="android.support.v4.content.FileProvider"
-    android:authority="com.example.app.fileprovider"
-    android:exported="true"
-    android:enabled="true">
+    android:name="androidx.core.content.FileProvider"
+    android:authorities="com.example.app.fileprovider"
+    android:exported="false"
+    android:grantUriPermissions="true">
     <meta-data
-        android:name="android.support.FILE_PROVIDER_PATHS"
-        android:resource="@xml/file_paths" />
-</provider>
+        android:resource="@xml/file_paths"
+        android:name="android.support.FILE_PROVIDER_PATHS"/>
 ```
 
 - res/xml/file_paths.xml
@@ -75,36 +82,25 @@ registerActivityResult(new ActivityResultContracts.StartActivityForResult(),
 
     - `geExternalCacheDir()`
      
-    ```java
-    /** 获取关联缓存目录的位置,具体位置是/sdcard/Android/data/<package name>/cache */
-    ```
-
+        获取关联缓存目录的位置,具体位置是/sdcard/Android/data/<package name>/cache
+ 
 - **File对象**
 
     - `File(String path, String fileName)`
 
-    ```java
-    /** 创建File对象 */
-    ```
+        创建File对象
 
     - `exists()`
 
-    ```java
-    /** 判断File对象对应的文件是否存在 */
-    ```
+        判断File对象对应的文件是否存在
 
     - `delete()`
      
-    ```java
-    /** 删除File对象对应的文件 */
-    ```
-
+        删除File对象对应的文件
 
     - `createNewFile()`
 
-    ```java
-    /** 从File对象创建文件 */
-    ```
+        从File对象创建文件
 
 - **从File对象获取Uri**
 
@@ -113,6 +109,7 @@ registerActivityResult(new ActivityResultContracts.StartActivityForResult(),
     ```java
     /** # Class FileProvider @path: android.support.v4.content.FileProvider
      * ContentProvider的子类
+     * 
      * @param context A {@link Context} for the current component.
      * @param authority The authority of a {@link FileProvider} defined in a
      *            {@code &lt;provider&gt;} element in your app's manifest.
@@ -127,6 +124,7 @@ registerActivityResult(new ActivityResultContracts.StartActivityForResult(),
      
     ```java
     /** #Class Uri
+     * 
      * Creates a Uri from a file. The URI has the form "file://<absolute path>".
      *  Encodes path characters with the exception of '/'. 
      * <p>Example: "file:///tmp/android.txt"
@@ -143,13 +141,18 @@ registerActivityResult(new ActivityResultContracts.StartActivityForResult(),
 
 ```java
 /** #Class ContentResolver
+ * 
  * Open a stream on to the content associated with a content URI.  If there
  * is no data associated with the URI, FileNotFoundException is thrown.
  */
 public final InputStream openInputStream(Uri uri)
 
 /** #Class BitmapFactory 
+ * 
  * Decode an input stream into a bitmap.
  */
 public static Bitmap decodeStream(InputStream is)
 ```
+
+#### 从相册选择照片
+
